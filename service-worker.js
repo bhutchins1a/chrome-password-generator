@@ -1,6 +1,8 @@
 const DEFAULT_LENGTH = 15;
 
-const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
+const LETTERS = UPPERCASE + LOWERCASE;
 const SPECIALS = '!@#$&_-';
 const DIGITS = '0123456789';
 
@@ -22,14 +24,20 @@ function randomChar(chars) {
 function generatePassword(length = DEFAULT_LENGTH) {
   length = Math.max(10, Math.min(20, length));
 
-  // Exactly one digit and exactly one allowed special character.
-  // All remaining characters are letters.
+  // Guarantee every generated password contains:
+  // - at least one uppercase letter
+  // - at least one lowercase letter
+  // - exactly one digit
+  // - exactly one allowed special character
   const chars = [
+    randomChar(UPPERCASE),
+    randomChar(LOWERCASE),
     randomChar(DIGITS),
     randomChar(SPECIALS)
   ];
 
-  for (let i = 0; i < length - 2; i++) {
+  // Fill the remaining positions with letters only.
+  for (let i = 0; i < length - 4; i++) {
     chars.push(randomChar(LETTERS));
   }
 
@@ -53,7 +61,18 @@ async function copyToClipboard(text) {
 function insertIntoActiveField(pwd) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
-    if (!tab || !tab.id) return;
+    if (!tab || !tab.id || !tab.url) return;
+
+    // Chrome does not allow extensions to inject scripts into
+    // internal or protected browser pages.
+    if (
+      tab.url.startsWith('chrome://') ||
+      tab.url.startsWith('chrome-extension://') ||
+      tab.url.startsWith('edge://') ||
+      tab.url.startsWith('about:')
+    ) {
+      return;
+    }
 
     chrome.scripting.executeScript(
       {
@@ -61,6 +80,7 @@ function insertIntoActiveField(pwd) {
         func: (value) => {
           const el = document.activeElement;
           if (!el) return;
+
           if ('value' in el) {
             el.value = value;
             el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -71,7 +91,11 @@ function insertIntoActiveField(pwd) {
         },
         args: [pwd]
       },
-      () => {}
+      () => {
+        if (chrome.runtime.lastError) {
+          // Ignore pages where Chrome prohibits script injection.
+        }
+      }
     );
   });
 }
@@ -87,6 +111,7 @@ chrome.commands.onCommand.addListener((command) => {
     async (items) => {
       const pwd = generatePassword(items.length);
       await copyToClipboard(pwd);
+
       if (items.autoInsert) {
         insertIntoActiveField(pwd);
       }
