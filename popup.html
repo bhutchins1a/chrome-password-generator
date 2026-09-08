@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Password Generator</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        margin: 10px;
+        min-width: 280px;
+      }
+      #password {
+        width: 100%;
+        font-family: monospace;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+      button {
+        margin-top: 8px;
+        margin-right: 6px;
+      }
+      #status {
+        font-size: 11px;
+        color: #555;
+        margin-top: 4px;
+      }
+      #lengthDisplay {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Letter Password</h3>
+
+    <label>
+      Length:
+      <input id="lengthRange" type="range" min="10" max="20" />
+      <span id="lengthDisplay"></span>
+    </label>
+
+    <input id="password" type="text" readonly />
+    <div>
+      <button id="generate">Generate</button>
+      <button id="copy">Copy</button>
+      <button id="options">Options</button>
+    </div>
+
+    <div id="status"></div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
