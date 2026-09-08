@@ -1,7 +1,7 @@
 {
   "name": "Letter Password Generator",
-  "description": "Generate a letter-only password and auto-copy/auto-insert it.",
-  "version": "1.1",
+  "description": "Generate a letter + 1 special character + 1 number password and auto-copy/auto-insert it.",
+  "version": "1.2",
   "manifest_version": 3,
   "action": {
     "default_title": "Generate password",

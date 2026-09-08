@@ -1,25 +1,45 @@
 const DEFAULT_LENGTH = 15;
 
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const SPECIALS = '!@#$&_-';
+const DIGITS = '0123456789';
+
+function randomIndex(maxExclusive) {
+  const limit = 0x100000000 - (0x100000000 % maxExclusive);
+  let value;
+
+  do {
+    value = crypto.getRandomValues(new Uint32Array(1))[0];
+  } while (value >= limit);
+
+  return value % maxExclusive;
+}
+
+function randomChar(chars) {
+  return chars.charAt(randomIndex(chars.length));
+}
+
 function generatePassword(length = DEFAULT_LENGTH) {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  const charsLen = chars.length;
-  let result = '';
+  length = Math.max(10, Math.min(20, length));
 
-  const randomValues = new Uint32Array(length);
-  crypto.getRandomValues(randomValues);
+  // Exactly one digit and exactly one allowed special character.
+  // All remaining characters are letters.
+  const chars = [
+    randomChar(DIGITS),
+    randomChar(SPECIALS)
+  ];
 
-  const max = 0x100000000 - (0x100000000 % charsLen);
-
-  for (let i = 0; i < length; i++) {
-    let val = randomValues[i];
-    while (val >= max) {
-      val = crypto.getRandomValues(new Uint32Array(1))[0];
-    }
-    const idx = val % charsLen;
-    result += chars.charAt(idx);
+  for (let i = 0; i < length - 2; i++) {
+    chars.push(randomChar(LETTERS));
   }
 
-  return result;
+  // Randomize the position of every character.
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = randomIndex(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+
+  return chars.join('');
 }
 
 function setStatus(msg) {
